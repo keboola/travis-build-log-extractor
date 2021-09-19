@@ -1,6 +1,6 @@
 {
-    "name": "keboola/my-component",
-    "description": "MyComponent description",
+    "name": "keboola/travis-build-log-extractor",
+    "description": "Travis build log extractor",
     "license": "MIT",
     "require": {
         "php": "^7.4",
@@ -17,13 +17,13 @@
     },
     "autoload": {
         "psr-4": {
-            "MyComponent\\": "src/"
+            "TravisLogExtractor\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "MyComponent\\Tests\\": "tests/phpunit/",
-            "MyComponent\\FunctionalTests\\": "tests/functional/"
+            "TravisLogExtractor\\Tests\\": "tests/phpunit/",
+            "TravisLogExtractor\\FunctionalTests\\": "tests/functional/"
         }
     },
     "scripts": {

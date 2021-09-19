@@ -1,6 +1,6 @@
-# my-component
+# Travis build log extractor
 
-[![Build Status](https://travis-ci.com/keboola/my-component.svg?branch=master)](https://travis-ci.com/keboola/my-component)
+[![Build Status](https://travis-ci.com/keboola/travis-build-log-extractor.svg?branch=master)](https://travis-ci.com/keboola/travis-build-log-extractor)
 
 > Fill in description
 
@@ -13,7 +13,7 @@
 Clone this repository and init the workspace with following command:
 
 ```
-git clone https://github.com/keboola/my-component
+git clone https://github.com/keboola/travis-build-log-extractor
 cd my-component
 docker-compose build
 docker-compose run --rm dev composer install --no-scripts

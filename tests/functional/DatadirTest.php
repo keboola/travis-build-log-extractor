@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MyComponent\FunctionalTests;
+namespace TravisLogExtractor\FunctionalTests;
 
 use Keboola\DatadirTests\DatadirTestCase;
 

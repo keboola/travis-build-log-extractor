@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
-namespace MyComponent;
+namespace TravisLogExtractor;
 
 use Keboola\Component\BaseComponent;
+use TravisLogExtractor\Config;
+use TravisLogExtractor\ConfigDefinition;
 
 class Component extends BaseComponent
 {
