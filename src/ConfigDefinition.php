@@ -16,9 +16,10 @@ class ConfigDefinition extends BaseConfigDefinition
         /** @noinspection NullPointerExceptionInspection */
         $parametersNode
             ->children()
-                ->scalarNode('foo')
-                    ->defaultValue('baz')
-                ->end()
+                ->scalarNode('#token')->end()
+                ->scalarNode('repo')->end()
+                ->scalarNode('branch')->end()
+                ->scalarNode('state')->end()
             ->end()
         ;
         // @formatter:on
