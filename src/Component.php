@@ -59,10 +59,14 @@ class Component extends BaseComponent
 
     private function extractBuilds(stdClass $repo, ?string $branch, ?string $state)
     {
-        $outfilesDir = $this->getDataDir() . '/out/files';
+        $outDir = $this->getDataDir() . '/out';
+        $outfilesDir = $outDir . '/files';
         if (!file_exists($outfilesDir)) {
             mkdir($outfilesDir, 0777, true);
         }
+
+        $summaryFilename = $outDir . '/jobs.csv';
+        $this->prepareSummary($summaryFilename);
 
         $this->getLogger()->notice(sprintf('Exporting repo "%s"', $repo->name));
         foreach ($this->client->buildsOfRepo($repo, $branch, $state) as $build) {
@@ -74,6 +78,7 @@ class Component extends BaseComponent
                         $job->state,
                         $job->finished_at
                     ));
+
                     $log = $this->client->logOfJob($job);
                     $logStream = StreamWrapper::getResource($this->client->getLogStreamFromLog($log));
                     $logFilenameParts = [];
@@ -82,12 +87,48 @@ class Component extends BaseComponent
 
                     $logFilenameParts[] = $job->number;
                     $logFilenameParts = array_map(fn($part) => strtr($part, '/', '-'), $logFilenameParts);
-                    $destinationStream = fopen($outfilesDir . '/' . implode('-', $logFilenameParts), 'w+');
+                    $logFilename = $outfilesDir . '/' . implode('-', $logFilenameParts);
+                    $destinationStream = fopen($logFilename, 'w+');
                     stream_copy_to_stream($logStream, $destinationStream);
                     fclose($destinationStream);
+
+                    $this->addLineToSummary($summaryFilename, [
+                        $repo->slug,
+                        $build->branch->name,
+                        $build->id,
+                        $build->number,
+                        $job->number,
+                        $job->state,
+                        basename($logFilename),
+                        filesize($logFilename),
+                        $job->started_at,
+                        $job->finished_at,
+                    ]);
                 }
             }
         }
+    }
+
+    private function prepareSummary(string $filename)
+    {
+        $summaryHeader = [
+            'repo',
+            'branch',
+            'build_id',
+            'build_number',
+            'job',
+            'job_state',
+            'job_file',
+            'job_file_size',
+            'started_at',
+            'finished_at',
+        ];
+        file_put_contents($filename, implode(',', $summaryHeader));
+    }
+
+    private function addLineToSummary(string $filename, array $line)
+    {
+        file_put_contents($filename, "\n" . implode(',', $line), FILE_APPEND);
     }
 
     private function parseBuild(stdClass $build)
