@@ -8,7 +8,7 @@ env:
     KBC_DEVELOPERPORTAL_APP: keboola.travis-build-log-extractor
     KBC_DEVELOPERPORTAL_USERNAME: keboola+travis_build_log_extractor
     KBC_DEVELOPERPORTAL_PASSWORD: '${{ secrets.KBC_DEVELOPERPORTAL_PASSWORD }}'
-    DOCKERHUB_USER: ''
+    DOCKERHUB_USER: '${{ secrets.DOCKERHUB_USER }}'
     DOCKERHUB_TOKEN: '${{ secrets.DOCKERHUB_TOKEN }}'
     KBC_STORAGE_TOKEN: '${{ secrets.KBC_STORAGE_TOKEN }}'
     KBC_TEST_PROJECT_URL: ''
