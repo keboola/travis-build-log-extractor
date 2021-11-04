@@ -1,4 +1,7 @@
 <?xml version="1.0"?>
 <ruleset name="Project">
     <rule ref="vendor/keboola/coding-standard/src/ruleset.xml"/>
+    <exclude-pattern>./vendor/*</exclude-pattern>
+    <exclude-pattern>./cache/*</exclude-pattern>
+    <exclude-pattern>./data/*</exclude-pattern>
 </ruleset>

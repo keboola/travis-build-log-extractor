@@ -5,3 +5,12 @@ services:
     volumes:
       - ./:/code
       - ./data:/data
+
+  dev-xdebug:
+    build:
+      context: docker/xdebug
+      args:
+        IMAGE: travis-build-log-extractor_dev
+    volumes:
+      - ./:/code
+      - ./data:/data
