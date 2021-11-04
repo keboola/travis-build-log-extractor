@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TravisLogExtractor;
 
+use DateTimeImmutable;
 use Keboola\Component\Config\BaseConfig;
 
 class Config extends BaseConfig
@@ -22,6 +23,15 @@ class Config extends BaseConfig
     public function getBranch(): ?string
     {
         return $this->getOptionalValue(['parameters', 'branch']);
+    }
+
+    public function getSince(): DateTimeImmutable
+    {
+        $date = $this->getOptionalValue(['parameters', 'since']);
+        if (!$date) {
+            return new DateTimeImmutable('-30 days');
+        }
+        return new DateTimeImmutable($date);
     }
 
     /**

@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace TravisLogExtractor;
 
+use DateTimeImmutable;
 use Exception;
 use GuzzleHttp\Psr7\StreamWrapper;
 use Keboola\Component\BaseComponent;
 use Keboola\Component\UserException;
 use Keboola\Csv\CsvWriter;
 use stdClass;
+use const DATE_ISO8601;
 
 class Component extends BaseComponent
 {
@@ -48,6 +50,15 @@ class Component extends BaseComponent
 
     private function extractBuilds(stdClass $repo, ?string $branch, ?string $state): void
     {
+        /** @var Config $config */
+        $config = $this->getConfig();
+        $sinceDateTime = $config->getSince();
+
+        $this->getLogger()->notice(sprintf(
+            'Exporting jobs since "%s"',
+            $sinceDateTime->format(DATE_ISO8601)
+        ));
+
         $outfilesDir = $this->getDataDir() . '/out/files';
         if (!file_exists($outfilesDir)) {
             mkdir($outfilesDir, 0777, true);
@@ -58,6 +69,18 @@ class Component extends BaseComponent
         foreach ($this->client->buildsOfRepo($repo, $branch, $state) as $build) {
             foreach ($this->client->stagesOfBuild($build, true) as $stage) {
                 foreach ($stage->jobs as $job) {
+                    /** @var Config $config */
+                    $config = $this->getConfig();
+                    $sinceDateTime = $config->getSince();
+                    $jobDateTime = new DateTimeImmutable($job->finished_at);
+                    if ($jobDateTime < $sinceDateTime) {
+                        $this->getLogger()->notice(sprintf(
+                            'Oldest job ("%s") before since ("%s") reached',
+                            $jobDateTime->format(DATE_ISO8601),
+                            $sinceDateTime->format(DATE_ISO8601),
+                        ));
+                        return;
+                    }
                     $this->getLogger()->notice(sprintf(
                         'Job "%s" (%s) from %s',
                         $job->number,
