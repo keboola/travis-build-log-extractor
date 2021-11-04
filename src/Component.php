@@ -8,6 +8,7 @@ use Exception;
 use GuzzleHttp\Psr7\StreamWrapper;
 use Keboola\Component\BaseComponent;
 use Keboola\Component\UserException;
+use Keboola\Csv\CsvWriter;
 use stdClass;
 
 class Component extends BaseComponent
@@ -51,7 +52,8 @@ class Component extends BaseComponent
         if (!file_exists($outfilesDir)) {
             mkdir($outfilesDir, 0777, true);
         }
-
+        $summaryFilename = $outfilesDir . '/jobs.csv';
+        $summaryWriter = $this->getSummaryWriter($summaryFilename);
         $this->getLogger()->notice(sprintf('Exporting repo "%s"', $repo->name));
         foreach ($this->client->buildsOfRepo($repo, $branch, $state) as $build) {
             foreach ($this->client->stagesOfBuild($build, true) as $stage) {
@@ -70,16 +72,48 @@ class Component extends BaseComponent
 
                     $logFilenameParts[] = $job->number;
                     $logFilenameParts = array_map(fn($part) => strtr($part, '/', '-'), $logFilenameParts);
-                    $destinationStreamFileName = $outfilesDir . '/' . implode('-', $logFilenameParts);
+                    $destinationStreamFileName = $outfilesDir . '/' . implode('-', $logFilenameParts) . '.log';
                     $destinationStream = fopen($destinationStreamFileName, 'w+');
                     if (!$destinationStream) {
                         throw new Exception(sprintf('Cannot write log to "%s"', $destinationStreamFileName));
                     }
                     stream_copy_to_stream($logStream, $destinationStream);
                     fclose($destinationStream);
+
+                    $summaryWriter->writeRow([
+                        $repo->slug,
+                        $build->branch->name,
+                        $build->id,
+                        $build->number,
+                        $job->number,
+                        $job->state,
+                        basename($destinationStreamFileName),
+                        filesize($destinationStreamFileName),
+                        $job->started_at,
+                        $job->finished_at,
+                    ]);
                 }
             }
         }
+    }
+
+    private function getSummaryWriter(string $summaryFilename): CsvWriter
+    {
+        $writer = new CsvWriter($summaryFilename);
+        $summaryHeader = [
+            'repo',
+            'branch',
+            'build_id',
+            'build_number',
+            'job',
+            'job_state',
+            'job_file',
+            'job_file_size',
+            'started_at',
+            'finished_at',
+        ];
+        $writer->writeRow($summaryHeader);
+        return $writer;
     }
 
     protected function getConfigClass(): string
@@ -90,9 +124,5 @@ class Component extends BaseComponent
     protected function getConfigDefinitionClass(): string
     {
         return ConfigDefinition::class;
-    }
-
-    private function parseBuild(stdClass $build): void
-    {
     }
 }

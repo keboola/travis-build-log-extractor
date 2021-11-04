@@ -5,6 +5,7 @@
     "require": {
         "php": "^7.4",
         "guzzlehttp/guzzle": "^7.3",
+        "keboola/csv": "^2.3",
         "keboola/php-component": "^8.1"
     },
     "require-dev": {
@@ -38,9 +39,9 @@
         ],
 
         "phpstan": "phpstan analyse ./src ./tests --level=max --no-progress -c phpstan.neon",
-        "phpcs": "phpcs -n --ignore=vendor --extensions=php .",
-        "phpcbf": "phpcbf -n --ignore=vendor --extensions=php .",
-        "phplint": "parallel-lint -j 10 --exclude vendor .",
+        "phpcs": "phpcs -n --ignore=vendor --ignore=cache --extensions=php .",
+        "phpcbf": "phpcbf -n --ignore=vendor --ignore=cache --extensions=php .",
+        "phplint": "parallel-lint -j 10 --exclude vendor --exclude cache .",
         "build": [
             "@phplint",
             "@phpcs",
