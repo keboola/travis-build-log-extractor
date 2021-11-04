@@ -6,10 +6,8 @@ namespace TravisLogExtractor;
 
 use Exception;
 use GuzzleHttp\Psr7\StreamWrapper;
-use GuzzleHttp\Psr7\Uri;
 use Keboola\Component\BaseComponent;
 use Keboola\Component\UserException;
-use Psr\Http\Message\ResponseInterface;
 use stdClass;
 
 class Component extends BaseComponent
@@ -38,7 +36,7 @@ class Component extends BaseComponent
         if (count($filteredRepos) === 0) {
             throw new UserException(sprintf('Selected repo "%s" not found', $config->getRepo()));
         }
-        if (count($filteredRepos) === 0) {
+        if (count($filteredRepos) > 1) {
             throw new Exception(sprintf('Multiple repos with slug "%s" found', $config->getRepo()));
         }
 
@@ -47,17 +45,7 @@ class Component extends BaseComponent
         $this->extractBuilds($repo, $config->getBranch(), $config->getState());
     }
 
-    protected function getConfigClass(): string
-    {
-        return Config::class;
-    }
-
-    protected function getConfigDefinitionClass(): string
-    {
-        return ConfigDefinition::class;
-    }
-
-    private function extractBuilds(stdClass $repo, ?string $branch, ?string $state)
+    private function extractBuilds(stdClass $repo, ?string $branch, ?string $state): void
     {
         $outfilesDir = $this->getDataDir() . '/out/files';
         if (!file_exists($outfilesDir)) {
@@ -82,7 +70,11 @@ class Component extends BaseComponent
 
                     $logFilenameParts[] = $job->number;
                     $logFilenameParts = array_map(fn($part) => strtr($part, '/', '-'), $logFilenameParts);
-                    $destinationStream = fopen($outfilesDir . '/' . implode('-', $logFilenameParts), 'w+');
+                    $destinationStreamFileName = $outfilesDir . '/' . implode('-', $logFilenameParts);
+                    $destinationStream = fopen($destinationStreamFileName, 'w+');
+                    if (!$destinationStream) {
+                        throw new Exception(sprintf('Cannot write log to "%s"', $destinationStreamFileName));
+                    }
                     stream_copy_to_stream($logStream, $destinationStream);
                     fclose($destinationStream);
                 }
@@ -90,8 +82,17 @@ class Component extends BaseComponent
         }
     }
 
-    private function parseBuild(stdClass $build)
+    protected function getConfigClass(): string
     {
+        return Config::class;
+    }
 
+    protected function getConfigDefinitionClass(): string
+    {
+        return ConfigDefinition::class;
+    }
+
+    private function parseBuild(stdClass $build): void
+    {
     }
 }

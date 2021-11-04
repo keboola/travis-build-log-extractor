@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace TravisLogExtractor\Client;
 
@@ -13,18 +13,18 @@ class TravisApiMiddleware
 
     public function __construct(
         string $travisToken
-    )
-    {
+    ) {
         $this->travisToken = $travisToken;
     }
-    public function __invoke()
+
+    public function __invoke(): callable
     {
         return function (callable $handler) {
             return function (RequestInterface $request, array $options) use ($handler) {
                 return $handler(
                     $request
                         ->withAddedHeader('Authorization', 'token ' . $this->travisToken)
-                        ->withAddedHeader('Travis-API-Version', 3),
+                        ->withAddedHeader('Travis-API-Version', '3'),
                     $options
                 );
             };

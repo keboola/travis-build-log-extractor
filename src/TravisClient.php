@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace TravisLogExtractor;
 
@@ -8,10 +8,8 @@ use Generator;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Uri;
-use GuzzleHttp\RequestOptions;
 use Kevinrob\GuzzleCache\CacheMiddleware;
 use Kevinrob\GuzzleCache\KeyValueHttpHeader;
-use Kevinrob\GuzzleCache\Storage\Psr16CacheStorage;
 use Kevinrob\GuzzleCache\Storage\Psr6CacheStorage;
 use Kevinrob\GuzzleCache\Strategy\GreedyCacheStrategy;
 use League\Flysystem\Local\LocalFilesystemAdapter;
@@ -26,11 +24,13 @@ class TravisClient
 
     private GuzzleClient $http;
 
+    /**
+     * @param mixed[] $config
+     */
     public function __construct(
-        array  $config,
+        array $config,
         string $travisToken
-    )
-    {
+    ) {
         $stack = HandlerStack::create();
         $travisApiMiddleware = new TravisApiMiddleware($travisToken);
         $stack->push($travisApiMiddleware());
@@ -43,9 +43,10 @@ class TravisClient
                             new FilesystemAdapter('', 0, $config['cacheDir'])
                         ),
                         60 * 60 * 24 * 365, // the TTL in seconds
-                        new KeyValueHttpHeader(['Authorization']) // Optional - specify the headers that can change the cache key
+                        new KeyValueHttpHeader(['Authorization'])
                     )
-                ), 'cache'
+                ),
+                'cache'
             );
         }
         $overrideConfig = [
@@ -56,6 +57,9 @@ class TravisClient
         $this->http = new GuzzleClient(array_merge($config, $overrideConfig));
     }
 
+    /**
+     * @return stdClass[]
+     */
     public function repositories(): array
     {
         $res = $this->http->request('GET', 'repos');
@@ -64,25 +68,10 @@ class TravisClient
         return json_decode($response)->repositories;
     }
 
-
-
-    protected function processPaginated(UriInterface $uri, string $itemKey): Generator
-    {
-        $next = $uri;
-        do {
-            $response = $this->http->request('GET', $next);
-            $body = $response->getBody()->getContents();
-            $page = json_decode($body);
-            $next = null;
-            if (!$page->{'@pagination'}->is_last) {
-                $next = $page->{'@pagination'}->next->{'@href'};
-            }
-            foreach ($page->{$itemKey} as $item)
-            yield $item;
-        } while ($next);
-    }
-
-    public function buildsOfRepo(stdClass $repo, ?string $branch, ?string $state)
+    /**
+     * @return Generator<stdClass>
+     */
+    public function buildsOfRepo(stdClass $repo, ?string $branch, ?string $state): Generator
     {
         $query = [];
         if ($branch !== null) {
@@ -99,6 +88,26 @@ class TravisClient
         }
     }
 
+    protected function processPaginated(UriInterface $uri, string $itemKey): Generator
+    {
+        $next = $uri;
+        do {
+            $response = $this->http->request('GET', $next);
+            $body = $response->getBody()->getContents();
+            $page = json_decode($body);
+            $next = null;
+            if (!$page->{'@pagination'}->is_last) {
+                $next = $page->{'@pagination'}->next->{'@href'};
+            }
+            foreach ($page->{$itemKey} as $item) {
+                yield $item;
+            }
+        } while ($next);
+    }
+
+    /**
+     * @return Generator<stdClass>
+     */
     public function stagesOfBuild(stdClass $build, bool $withJobs): Generator
     {
         $query = [];
